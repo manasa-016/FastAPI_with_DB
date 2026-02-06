@@ -1,10 +1,17 @@
 from fastapi import APIRouter
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from db import get_db
+from repositories.User_repo import UserRepo
 
 router = APIRouter()
 
 @router.post("/signup")
-def signup():
-    return {"message": "User created successfully"}
+def signup(user:User,db:Session=Depends(get_db)):
+    user_repo = UserRepo(db)
+    user_repo.add_user()
+    return {"message": "User signed up successfully"}
+    
 
 @router.post("/login")
 def login():
