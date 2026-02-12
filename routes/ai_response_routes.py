@@ -35,7 +35,20 @@ async def ask_ai(
         # Save history only if logged in
         if user_id:
             repo = ChatHistoryRepo(db)
-            repo.add_chat(user_id, request.message, response)
+            conversation_id = request.conversation_id
+            
+            # If no conversation ID provided, create a new one
+            if not conversation_id:
+                # Simple title generation strategy: first few words of message
+                title = " ".join(request.message.split()[:5])
+                conversation = repo.create_conversation(user_id, title)
+                conversation_id = conversation.id
+            
+            repo.add_chat(conversation_id, request.message, response)
+            
+            # Optionally return the conversation ID in the response? 
+            # The AIResponse schema currently only has 'response'.
+            # Ideally we should update AIResponse too, but let's stick to minimum changes for now.
             
         return AIResponse(response=response)
     

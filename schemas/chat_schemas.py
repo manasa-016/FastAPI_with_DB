@@ -9,7 +9,7 @@ class ChatHistoryBase(BaseModel):
 
 class ChatHistoryResponse(ChatHistoryBase):
     id: int
-    user_id: int
+    conversation_id: int
 
     class Config:
         from_attributes = True
