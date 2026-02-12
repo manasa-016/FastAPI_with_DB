@@ -6,6 +6,9 @@ from db import get_db,DATABASE_URL
 from sqlalchemy import create_engine
 from fastapi.middleware.cors import CORSMiddleware
 from models import Base
+import os
+
+
 
 app = FastAPI()
 

@@ -34,4 +34,3 @@ def get_completion(user_message, system_message="You are a helpful assistant."):
     )
     return response.choices[0].message.content
     
-
