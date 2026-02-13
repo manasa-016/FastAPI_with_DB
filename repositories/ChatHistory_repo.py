@@ -29,3 +29,19 @@ class ChatHistoryRepo:
     def get_history_by_user(self, user_id: int):
         # Fetch all messages for a user across all conversations
         return self.db.query(ChatHistory).join(Conversation).filter(Conversation.user_id == user_id).order_by(ChatHistory.timestamp.desc()).all()
+
+    def delete_conversation(self, conversation_id: int, user_id: int):
+        """Delete a conversation and all its associated messages."""
+        conversation = self.db.query(Conversation).filter(
+            Conversation.id == conversation_id, 
+            Conversation.user_id == user_id
+        ).first()
+        
+        if conversation:
+            # SQLAlchemy will handle cascading deletion if configured, 
+            # but let's be explicit if not already defined in models.
+            self.db.query(ChatHistory).filter(ChatHistory.conversation_id == conversation_id).delete()
+            self.db.delete(conversation)
+            self.db.commit()
+            return True
+        return False
