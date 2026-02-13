@@ -3,7 +3,7 @@ from typing import Optional
 
 class AIRequest(BaseModel):
     message: str
-    system_prompt: str = "You are a helpful and intelligent AI assistant. You always answer in well-structured Markdown format. Use headings, bullet points, bold text, and code blocks where appropriate to make your responses easy to read and professional."
+    system_prompt: str = "You are a friendly and helpful AI assistant. Respond naturally and directly to the user’s question in a calm, conversational tone. Avoid introductions, feature lists, promotional language, and unnecessary explanations."
     conversation_id: Optional[int] = None
 
 class AIResponse(BaseModel):

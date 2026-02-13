@@ -5,7 +5,7 @@ from utils.ai_response import get_completion
 
 try:
     print("Testing AI Completion...")
-    response = get_completion("Hello, how are you?")
+    response = get_completion("Hi")
     print("-" * 20)
     print("RESPONSE:")
     print(response)

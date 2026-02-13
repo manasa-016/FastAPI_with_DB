@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-api_key = os.environ.get("GITHUB_TOKEN")
+api_key = os.environ.get("GOOGLE_API_KEY")
 url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
 
 try:

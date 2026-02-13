@@ -6,12 +6,22 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 
 
-def get_completion(user_message, system_message="You are a helpful assistant."):
+def get_completion(user_message, system_message="You are a friendly and helpful AI assistant. Respond naturally and directly to the user’s question in a calm, conversational tone. Avoid introductions, feature lists, promotional language, and unnecessary explanations."):
     """
     Get a completion from the Gemini model using the REST API with exponential backoff retries.
     """
     # Load .env each time so key updates are picked up without restart
-    load_dotenv(override=True)
+    # Load .env explicitly from the project root (parent directory of utils)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(current_dir)
+    env_path = os.path.join(project_root, ".env")
+    
+    if os.path.exists(env_path):
+        load_dotenv(env_path, override=True)
+    else:
+        print(f"WARNING: .env file not found at {env_path}")
+        load_dotenv(override=True)  # Fallback to default search
+
     
     api_key = os.environ.get("GOOGLE_API_KEY")
     if api_key:
@@ -20,7 +30,7 @@ def get_completion(user_message, system_message="You are a helpful assistant."):
     if not api_key:
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
     
     headers = {
         "Content-Type": "application/json"
