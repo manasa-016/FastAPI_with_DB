@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8003" # Using the test port 8003
+BASE_URL = "http://127.0.0.1:8000"
 
 def test_conversation_flow():
     print("\n--- Testing Conversation Flow ---")
@@ -26,6 +26,9 @@ def test_conversation_flow():
     payload = {"message": "start a new conversation"}
     resp1 = requests.post(ask_url, json=payload, headers=headers)
     print(f"Msg 1 Status: {resp1.status_code}")
+    if resp1.status_code != 200:
+        print(f"Msg 1 Error Detail: {resp1.text}")
+        return
     print(f"Msg 1 Response: {resp1.json().get('response')[:30]}...")
     
     # 3. Ask again (Should ideally continue if we passed conversation_id, but here it might create new one or just log)

@@ -8,3 +8,4 @@ class AIRequest(BaseModel):
 
 class AIResponse(BaseModel):
     response: str
+    conversation_id: Optional[int] = None

@@ -25,6 +25,8 @@ async def ask_ai(
         if payload:
             user_id = int(payload.get("sub"))
 
+    conversation_id = request.conversation_id
+
     try:
         response = await run_in_threadpool(
             get_completion, 
@@ -35,7 +37,6 @@ async def ask_ai(
         # Save history only if logged in
         if user_id:
             repo = ChatHistoryRepo(db)
-            conversation_id = request.conversation_id
             
             # If no conversation ID provided, create a new one
             if not conversation_id:
@@ -46,11 +47,15 @@ async def ask_ai(
             
             repo.add_chat(conversation_id, request.message, response)
             
-        return AIResponse(response=response)
+        return AIResponse(response=response, conversation_id=conversation_id)
     
+    except HTTPException as e:
+        raise e  # Re-raise the original HTTPException
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail="AI processing failed.")
+        print(f"CRITICAL ERROR in ask_ai: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
 
 @router.get("/history", response_model=ChatHistoryList)
 def get_ai_history(
