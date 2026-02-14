@@ -1,5 +1,5 @@
 from db import engine, Base
-from models import User, ChatHistory # Import all models to ensure they are registered
+from models import User, ChatHistory, Conversation # Import all models to ensure they are registered
 
 def init_db():
     print("Initializing database...")
