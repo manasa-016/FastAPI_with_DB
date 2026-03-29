@@ -56,7 +56,7 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
     for attempt in range(max_retries + 1):
         try:
             print(f"DEBUG: Calling Gemini API (Model: {model}) - Attempt {attempt + 1}")
-            response = requests.post(url, headers=headers, json=payload, timeout=20)
+            response = requests.post(url, headers=headers, json=payload, timeout=60)
             
             # 429 = Rate Limit, 503 = Service Unavailable (High Demand)
             if response.status_code in [429, 503]:
