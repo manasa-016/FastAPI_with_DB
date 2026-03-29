@@ -28,9 +28,12 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
         api_key = api_key.strip().strip('"').strip("'")
     
     if not api_key:
+        print("ERROR: GOOGLE_API_KEY not found in environment.")
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
+    # Model name - ensure we use the one confirmed for this environment
+    model = "gemini-flash-latest"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     headers = {
         "Content-Type": "application/json"
@@ -52,7 +55,8 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
 
     for attempt in range(max_retries + 1):
         try:
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            print(f"DEBUG: Calling Gemini API (Model: {model}) - Attempt {attempt + 1}")
+            response = requests.post(url, headers=headers, json=payload, timeout=20)
             
             # 429 = Rate Limit, 503 = Service Unavailable (High Demand)
             if response.status_code in [429, 503]:
@@ -63,37 +67,36 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
                     print(f"WARNING: Gemini API {error_type} ({response.status_code}). Retrying in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})")
                     time.sleep(delay)
                     continue
-                else:
-                    if response.status_code == 429:
-                        raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Please wait a moment.")
-                    else:
-                        raise HTTPException(status_code=503, detail="Gemini API is currently overloaded. Please try again in a few seconds.")
             
             response.raise_for_status()
             data = response.json()
             
             # Extract the response text
             if "candidates" in data and len(data["candidates"]) > 0:
+                print("DEBUG: Gemini API response received successfully.")
                 return data["candidates"][0]["content"]["parts"][0]["text"]
             else:
-                print(f"Gemini API unexpected response format: {data}")
+                print(f"ERROR: Gemini API unexpected response format: {data}")
                 raise Exception("Unexpected response format from Gemini API")
                 
-        except requests.exceptions.HTTPError as e:
-            if e.response is not None and e.response.status_code in [429, 503]:
-                 if attempt < max_retries:
-                     continue
-                 status = e.response.status_code
-                 msg = "Gemini API quota exceeded." if status == 429 else "Gemini API is currently overloaded."
-                 raise HTTPException(status_code=status, detail=msg)
+        except requests.exceptions.Timeout:
+            print("ERROR: Gemini API request timed out.")
+            if attempt < max_retries:
+                time.sleep(1)
+                continue
+            raise HTTPException(status_code=504, detail="AI service timed out. Please try again.")
             
-            print(f"Gemini REST API Error: {str(e)}")
-            if e.response is not None:
-                 print(f"Response Details: {e.response.text}")
-                 raise HTTPException(status_code=500, detail=f"AI processing failed: {e.response.status_code}")
-            raise HTTPException(status_code=500, detail="AI processing failed (No response body).")
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code
+            print(f"ERROR: Gemini API HTTP {status}: {e.response.text}")
+            if status in [429, 503] and attempt < max_retries:
+                 time.sleep(2)
+                 continue
+            msg = "Gemini API quota exceeded." if status == 429 else f"AI service error: {status}"
+            raise HTTPException(status_code=status if status != 404 else 500, detail=msg)
+            
         except Exception as e:
-            print(f"Gemini REST API Error: {str(e)}")
+            print(f"ERROR: AI processing error: {str(e)}")
             if attempt < max_retries:
                 time.sleep(1)
                 continue

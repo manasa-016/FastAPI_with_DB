@@ -2,15 +2,16 @@ from fastapi import FastAPI
 from routes.user_routes import router as user_router
 from routes.ai_response_routes import router as ai_response_router
 from routes.email_routes import router as email_router
-from db import get_db,DATABASE_URL
-from sqlalchemy import create_engine
+from db import get_db, engine
 from fastapi.middleware.cors import CORSMiddleware
 from models import Base
 import os
 
 
-
 app = FastAPI()
+
+# Database initialization should be handled externally or as a migration
+# If you want it on startup, run it as a background task to avoid blocking the server.
 
 #cors
 app.add_middleware(
@@ -24,10 +25,6 @@ app.add_middleware(
 app.include_router(user_router)
 app.include_router(ai_response_router)
 app.include_router(email_router)
-#to create database
-
-engine=create_engine(DATABASE_URL)
-Base.metadata.create_all(engine)
 
 @app.get("/")
 def read_root():
@@ -35,4 +32,4 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
