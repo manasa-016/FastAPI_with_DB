@@ -17,7 +17,7 @@ def signup(user: UserSchema, db: Session = Depends(get_db)):
     existing_user = user_repo.get_user_by_email(user.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
-    db_user = User(email=user.email, password=user.password)
+    db_user = User(full_name=user.full_name, email=user.email, password=user.password)
     user_repo.add_user(db_user)
     return {"message": "User signed up successfully"}
 
