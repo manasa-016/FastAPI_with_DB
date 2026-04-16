@@ -50,12 +50,15 @@ async def ask_ai(
         return AIResponse(response=response, conversation_id=conversation_id)
     
     except HTTPException as e:
-        raise e  # Re-raise the original HTTPException
+        print(f"HTTP Error in ask_ai: {e.status_code} - {e.detail}")
+        raise e
     except Exception as e:
-        print(f"CRITICAL ERROR in ask_ai: {str(e)}")
+        error_msg = str(e) or e.__class__.__name__
+        print(f"CRITICAL ERROR in ask_ai: {error_msg}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
+        # Always return a JSON with detail so the frontend can display it
+        raise HTTPException(status_code=500, detail=f"Request failed: {error_msg}")
 
 @router.get("/history", response_model=ChatHistoryList)
 def get_ai_history(

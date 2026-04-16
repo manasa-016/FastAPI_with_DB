@@ -31,7 +31,7 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
         print("ERROR: GOOGLE_API_KEY not found in environment.")
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
-    # Model name - ensure we use the one confirmed for this environment
+    # Use the model name that worked in test_gemini.py
     model = "gemini-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     

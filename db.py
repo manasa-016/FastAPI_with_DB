@@ -15,7 +15,10 @@ print("DATABASE_URL",DATABASE_URL)
 engine = create_engine(
     DATABASE_URL, 
     pool_pre_ping=True, 
-    pool_recycle=3600
+    pool_recycle=300,
+    pool_size=5,
+    max_overflow=10,
+    connect_args={"sslmode": "require"}
 )
 
 #create sessionLocal class for creating sessions
