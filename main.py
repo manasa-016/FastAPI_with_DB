@@ -41,6 +41,15 @@ app.include_router(email_router)
 def read_root():
     return {"Hello": "World"}
 
+@app.get("/test-ai")
+async def test_ai():
+    from utils.ai_response import get_completion
+    try:
+        response = get_completion("Hi")
+        return {"status": "success", "response": response}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 if __name__ == "__main__":
     import uvicorn
     # Use PORT environment variable for Render compatibility

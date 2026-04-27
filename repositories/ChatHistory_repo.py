@@ -27,8 +27,8 @@ class ChatHistoryRepo:
     
     # Keeping old method for backward compatibility if needed, but updated logic
     def get_history_by_user(self, user_id: int):
-        # Fetch all messages for a user across all conversations
-        return self.db.query(ChatHistory).join(Conversation).filter(Conversation.user_id == user_id).order_by(ChatHistory.timestamp.desc()).all()
+        # Fetch all messages for a user across all conversations in chronological order
+        return self.db.query(ChatHistory).join(Conversation).filter(Conversation.user_id == user_id).order_by(ChatHistory.timestamp.asc()).all()
 
     def delete_conversation(self, conversation_id: int, user_id: int):
         """Delete a conversation and all its associated messages."""
