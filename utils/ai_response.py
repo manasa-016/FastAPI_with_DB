@@ -32,7 +32,8 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
     # Use a more stable model for production
-    model = "gemini-1.5-flash"
+    # Use the more robust 'latest' alias for gemini-1.5-flash
+    model = "gemini-1.5-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     headers = {
@@ -67,8 +68,17 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
                     continue
             
             if response.status_code != 200:
-                print(f"ERROR: Gemini API returned {response.status_code}: {response.text}")
-                response.raise_for_status()
+                error_text = response.text
+                print(f"ERROR: Gemini API returned {response.status_code}: {error_text}")
+                
+                # Special messages for common errors
+                msg = f"AI service unavailable ({response.status_code}). Details: {error_text[:100]}"
+                if response.status_code == 429:
+                    msg = "Gemini API quota exceeded (429). Please wait a moment."
+                elif response.status_code == 404:
+                    msg = f"AI Model not found (404). Current model: {model}"
+                
+                raise HTTPException(status_code=500, detail=msg)
 
             data = response.json()
             

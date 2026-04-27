@@ -27,6 +27,7 @@ app.add_middleware(
         "http://127.0.0.1:5173", 
         "http://localhost:3000",
         "https://lumina-black-eta.vercel.app",
+        "https://lumina-eta-seven.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
