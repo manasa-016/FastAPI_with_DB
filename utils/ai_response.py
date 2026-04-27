@@ -31,8 +31,8 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
         print("ERROR: GOOGLE_API_KEY not found in environment.")
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
-    # Use the model name that worked in test_gemini.py
-    model = "gemini-flash-latest"
+    # Use a more stable model for production
+    model = "gemini-1.5-flash"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     headers = {
@@ -56,28 +56,32 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
     for attempt in range(max_retries + 1):
         try:
             print(f"DEBUG: Calling Gemini API (Model: {model}) - Attempt {attempt + 1}")
-            response = requests.post(url, headers=headers, json=payload, timeout=60)
+            response = requests.post(url, headers=headers, json=payload, timeout=50)
             
             # 429 = Rate Limit, 503 = Service Unavailable (High Demand)
             if response.status_code in [429, 503]:
                 if attempt < max_retries:
-                    # Exponential backoff with jitter
                     delay = (base_delay ** attempt) + random.uniform(0, 1)
-                    error_type = "Quota Exceeded" if response.status_code == 429 else "High Demand"
-                    print(f"WARNING: Gemini API {error_type} ({response.status_code}). Retrying in {delay:.2f}s... (Attempt {attempt + 1}/{max_retries})")
+                    print(f"WARNING: Gemini API {response.status_code}. Retrying in {delay:.2f}s...")
                     time.sleep(delay)
                     continue
             
-            response.raise_for_status()
+            if response.status_code != 200:
+                print(f"ERROR: Gemini API returned {response.status_code}: {response.text}")
+                response.raise_for_status()
+
             data = response.json()
             
             # Extract the response text
             if "candidates" in data and len(data["candidates"]) > 0:
-                print("DEBUG: Gemini API response received successfully.")
-                return data["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                print(f"ERROR: Gemini API unexpected response format: {data}")
-                raise Exception("Unexpected response format from Gemini API")
+                content = data["candidates"][0].get("content", {})
+                parts = content.get("parts", [])
+                if parts and "text" in parts[0]:
+                    print("DEBUG: Gemini API response received successfully.")
+                    return parts[0]["text"]
+            
+            print(f"ERROR: Gemini API unexpected response format: {data}")
+            raise Exception("Unexpected response format from Gemini API")
                 
         except requests.exceptions.Timeout:
             print("ERROR: Gemini API request timed out.")
@@ -88,11 +92,10 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
             
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code
-            print(f"ERROR: Gemini API HTTP {status}: {e.response.text}")
             if status in [429, 503] and attempt < max_retries:
                  time.sleep(2)
                  continue
-            msg = "Gemini API quota exceeded." if status == 429 else f"AI service error: {status}"
+            msg = "Gemini API quota exceeded (429)." if status == 429 else f"AI service unavailable ({status}). Please try again."
             raise HTTPException(status_code=status if status != 404 else 500, detail=msg)
             
         except Exception as e:

@@ -10,6 +10,12 @@ import os
 
 app = FastAPI()
 
+@app.on_event("startup")
+def startup_event():
+    print("Initializing database tables...")
+    Base.metadata.create_all(bind=engine)
+    print("Database initialization complete.")
+
 # Database initialization should be handled externally or as a migration
 # If you want it on startup, run it as a background task to avoid blocking the server.
 
@@ -37,4 +43,7 @@ def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use PORT environment variable for Render compatibility
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting server on port {port}...")
+    uvicorn.run(app, host="0.0.0.0", port=port)
