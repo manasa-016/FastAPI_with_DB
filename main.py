@@ -42,6 +42,15 @@ app.include_router(email_router)
 def read_root():
     return {"Hello": "World"}
 
+@app.get("/list-models")
+async def list_models():
+    from utils.ai_response import list_available_models
+    try:
+        models = list_available_models()
+        return {"status": "success", "models": models}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/test-ai")
 async def test_ai():
     from utils.ai_response import get_completion

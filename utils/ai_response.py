@@ -6,6 +6,23 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 
 
+def list_available_models():
+    """List all available models for the given API key."""
+    api_key = os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        return ["Error: API Key not found"]
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return [m.get("name") for m in data.get("models", [])]
+        return [f"Error: {response.status_code} - {response.text}"]
+    except Exception as e:
+        return [f"Exception: {str(e)}"]
+
+
 def get_completion(user_message, system_message="You are a friendly and helpful AI assistant. Respond naturally and directly to the user’s question in a calm, conversational tone. Avoid introductions, feature lists, promotional language, and unnecessary explanations."):
     """
     Get a completion from the Gemini model using the REST API with exponential backoff retries.
