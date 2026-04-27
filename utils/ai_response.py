@@ -49,8 +49,8 @@ def get_completion(user_message, system_message="You are a friendly and helpful 
         raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not found in .env file. Please add it.")
 
     # Use a more stable model for production
-    # Use the more robust 'latest' alias for gemini-1.5-flash
-    model = "gemini-1.5-flash-latest"
+    # The diagnostic tool revealed that 'gemini-flash-latest' is the correct name
+    model = "gemini-flash-latest"
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     
     headers = {
